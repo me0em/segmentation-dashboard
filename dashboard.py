@@ -25,10 +25,21 @@ logger.addHandler(handler)
 
 
 class Board():
-    """ Use this class to ...
+    """ Dashboard class
     
     Args:
-        dict_images <dict>: images, pairly packed in dict for ...
+        dataloaders <list[dataloader]>: list of dataloader objects which are returns tuple of any types objects
+        model: model returns object that go right in the measure() and go in the render() wrapped with render_fn
+        model_name: name of the model for JSON report
+        render_fn: use this fn to wraps dataloader and modelled object to render
+        render_dl_idx <int>: index of dataloader we need to render
+        obj_item <int>: index of element in tuple from dataloader that will be rendered
+        obj_name_item <int>: index of filename
+        to_model_item <int>: image
+        limit <int>: amount of rendered objects
+        phs_in_row <int>: amount of rendered objects in row
+        get_randomly <bool>: it's usefull if dataloader is big and we want to get different :limit: object from it to render  
+        c <int>: frankly idk what it is
         ...
     """
     def __init__(
@@ -123,12 +134,12 @@ class Board():
         self.render(storages[self.render_dl_idx])
         
         logger.info("Measure...")
-        results = self.measure(storages, dl_names)
+        report = self.report(storages, dl_names)
         
-        return results
+        return report
         
         logger.info("Dump results... / TODO")
-        # self.dump_results(storage)
+        # self.save_report(storage)
 
     # def render(self, storage: dict[str, tuple[Array["H,W", float], Array["H,W", float]]]):
     def render(self, storage):
