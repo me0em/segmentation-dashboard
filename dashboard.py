@@ -134,7 +134,9 @@ class Board():
                 
             storages.append(storage)
             dl_names.append(dl.dataset.name)
-                
+        
+        # return storages
+        
         logger.info("Storages has been formed")
                 
         logger.info("Render...") 
@@ -188,7 +190,7 @@ class Board():
                         list(storage.keys())[k], loc="left",
                         fontsize=12, fontweight="regular", pad=15
                     )
-                    axs[i, j+1].imshow(255-self._gv(storage, k)[1], cmap="gray")
+                    axs[i, j+1].imshow(self._gv(storage, k)[1], cmap="gray")
                     
                     k += 1
                     j += 1
@@ -203,7 +205,7 @@ class Board():
                 for j in range(first_subplot_number, first_empty_number, 2):
                     axs[lines, j].imshow(self._gv(storage, k)[0], cmap="gray")
                     axs[lines, j].set_title(list(storage.keys())[k], loc='left', fontsize=12, fontweight="regular", pad=15)
-                    axs[lines, j+1].imshow(255-self._gv(storage, k)[1], cmap="gray")
+                    axs[lines, j+1].imshow(self._gv(storage, k)[1], cmap="gray")
                     k += 1
                     j += 1
                     
@@ -211,7 +213,7 @@ class Board():
             for j in range(0, 2*self.phs_in_row, 2):
                 axs[j].imshow(self._gv(storage, k)[0], cmap="gray")
                 axs[j].set_title(list(storage.keys())[k], loc="left", fontsize=12, fontweight="regular", pad=15)
-                axs[j+1].imshow(255-self._gv(storage, k)[1], cmap="gray")
+                axs[j+1].imshow(self._gv(storage, k)[1], cmap="gray")
                 k += 1
                 j += 1
                  
@@ -219,7 +221,7 @@ class Board():
             for j in range(0, 2*n, 2):
                 axs[j].imshow(self._gv(storage, k)[0], cmap="gray")
                 axs[j].set_title(list(storage.keys())[k], loc="left", fontsize=12, fontweight="regular", pad=15)
-                axs[j+1].imshow(255-self._gv(storage, k)[1], cmap="gray")
+                axs[j+1].imshow(self._gv(storage, k)[1], cmap="gray")
                 k += 1
                 j += 1
        
@@ -259,6 +261,7 @@ class Board():
                 "mean": torch.mean(values).item(),
                 "nan_amount": nan_items
             }
-            
+        
+            print(f"metric: {metric_name}, val: {torch.max(values).item()}, idx: {torch.argmax(values)}, name: {list(storage.keys())[torch.argmax(values).item()]}")
                 
         return dataloader_report

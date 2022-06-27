@@ -25,5 +25,5 @@ class IoU(torch.nn.Module):
 
     def forward(self, pred, target):
 
-        return _iou(pred, target, self.size_average)
+        return 1 - _iou(pred, target, self.size_average)  # It's not a loss, it's a metric!
 

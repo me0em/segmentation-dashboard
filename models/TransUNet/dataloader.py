@@ -84,11 +84,17 @@ class XRayRenderSet(Dataset):
 
 
 class XRaySet(Dataset):
-    def __init__(self, mask_paths, image_paths, transform, name):
+    def __init__(self, mask_paths, image_paths, name):
         self.mask_paths = mask_paths
         self.image_paths = image_paths
-        self.transform = transform
         self.name = name
+        
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((256, 256)),
+            MinMaxNormalize()
+        ])
+
         
     def __len__(self):
         return len(self.mask_paths)
@@ -152,7 +158,7 @@ def build_the_dataloader(batch_size, img_path, mask_path, name):
     test_image_paths = [img_paths[ind] for ind in test_idxs]
     test_mask_paths  = [mask_paths[ind] for ind in test_idxs]
 
-    test_dataset = XRaySet(image_paths=test_image_paths, mask_paths=test_mask_paths, transform=transform, name=name)
+    test_dataset = XRaySet(image_paths=test_image_paths, mask_paths=test_mask_paths, name=name)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 
     return test_dataloader
