@@ -28,7 +28,8 @@ class Board():
     """ Dashboard class
     
     Args:
-        dataloaders <list[dataloader]>: list of dataloader objects which are returns tuple of any types objects
+        dataloaders <list[dataloader]>: list of dataloader objects which are returns tuple of any types objects.
+                                        every dataloader should have name attribute for JSON report
         model: model returns object that go right in the measure() and go in the render() wrapped with render_fn
         model_name: name of the model for JSON report
         render_fn: use this fn to wraps dataloader and modelled object to render
@@ -38,8 +39,10 @@ class Board():
         to_model_item <int>: image
         limit <int>: amount of rendered objects
         phs_in_row <int>: amount of rendered objects in row
-        get_randomly <bool>: it's usefull if dataloader is big and we want to get different :limit: object from it to render  
+        get_randomly <bool>: it's usefull if dataloader is big and we want to get different
+                             :limit: object from it to render  
         c <int>: frankly idk what it is
+        inverse_modelled_obj <bool>: if True modelled tensor [1, 0, 0] flips to [0, 1, 1]
         ...
     """
     def __init__(
@@ -55,7 +58,8 @@ class Board():
             limit=10,
             phs_in_row=4,
             get_randomly=False,
-            c=3
+            c=3,
+            inverse_modelled_obj=False
         ):
         
         # model vars
@@ -72,6 +76,7 @@ class Board():
         self.phs_in_row = phs_in_row
         self.get_randomly = get_randomly
         self.stratch_factor = c
+        self.inverse_modelled_obj = inverse_modelled_obj
 
     @staticmethod
     def _cut_module_name(name):
@@ -119,22 +124,24 @@ class Board():
                 data[self.obj_item] = data[self.obj_item].to(device)
                 data[self.to_model_item] = data[self.to_model_item].to(device)
 
-                storage[data[self.obj_name_item][0]] = (        # IF BATCH_SIZE=1 WE NEED [0]
-                    data[self.obj_item],
-                    self.model.predict(data[self.to_model_item]),  # изображение FIXME
-                )
+                filepath = data[self.obj_name_item][0]  # IF BATCH_SIZE=1 WE NEED [0]
+                target_obj = data[self.obj_item]
+                modelled_obj = self.model.predict(data[self.to_model_item])
+                if self.inverse_modelled_obj:
+                    modelled_obj = torch.abs(1 - modelled_obj)
+                    
+                storage[filepath] = (target_obj, modelled_obj)
                 
             storages.append(storage)
             dl_names.append(dl.dataset.name)
-        
-        
+                
         logger.info("Storages has been formed")
                 
         logger.info("Render...") 
         self.render(storages[self.render_dl_idx])
         
         logger.info("Measure...")
-        report = self.report(storages, dl_names)
+        report = self.measure(storages, dl_names)
         
         return report
         
@@ -223,17 +230,17 @@ class Board():
         plt.show()
         
     def measure(self, storages, dl_names):
-        response = {self.model_name: {}}
+        report = {self.model_name: {}}
         
         for storage, dl_name in zip(storages, dl_names):
-            response[self.model_name][dl_name] = self.measure_dataloader(storage)
+            report[self.model_name][dl_name] = self.measure_dataloader(storage)
             
-        return response
+        return report
         
     def measure_dataloader(self, storage):
         self.metrics = self._load_metrics()
         
-        results = {}
+        dataloader_report = {}
         for metric_name, metric in self.metrics.items():
             values = []
             for img1, img2 in storage.values():
@@ -246,7 +253,7 @@ class Board():
             not_nan_tensor_len = len(values)
             nan_items = raw_tensor_len - not_nan_tensor_len
             
-            results[metric_name] = {
+            dataloader_report[metric_name] = {
                 "min": torch.min(values).item(),
                 "max": torch.max(values).item(),
                 "mean": torch.mean(values).item(),
@@ -254,4 +261,4 @@ class Board():
             }
             
                 
-        return results
+        return dataloader_report
