@@ -246,7 +246,7 @@ class Board():
         for metric_name, metric in self.metrics.items():
             values = []
             for img1, img2 in storage.values():
-                values.append(metric().to(device)(img1, img2))
+                values.append(metric().to(device)(img1.to(device), img2.to(device)))
                                 
             values = torch.tensor(values)
             
