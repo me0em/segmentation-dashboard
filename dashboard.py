@@ -130,7 +130,7 @@ class Board():
                 if self.inverse_modelled_obj:
                     modelled_obj = torch.abs(1 - modelled_obj)
                     
-                storage[filepath] = (target_obj, modelled_obj)
+                storage[filepath] = (target_obj.cpu(), modelled_obj.cpu())  # save to RAM as cpu
                 
             storages.append(storage)
             dl_names.append(dl.dataset.name)

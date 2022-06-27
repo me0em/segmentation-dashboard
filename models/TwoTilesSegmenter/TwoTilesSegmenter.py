@@ -112,7 +112,9 @@ class Segmenter(LightningModule):
         flag1 = is_anomalia_pred1.ge(self.POR)
 
         mask_ = self.model(img[flag].unsqueeze(1))
+        mask_ = torch.sigmoid(mask_)
         mask1_ = self.model(img1[flag1].unsqueeze(1))
+        mask1_ = torch.sigmoid(mask1_)
         mask = torch.zeros(*img.size())
         mask1 = torch.zeros(*img1.size())
         k = 0
