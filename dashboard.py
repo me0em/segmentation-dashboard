@@ -64,7 +64,7 @@ class Board():
         
         # model vars
         self.dataloaders = dataloaders
-        self.model = model
+        self.model = model.eval()  # EVAL IT
         self.model_name = model_name
         # render vars
         self.render_fn = render_fn
@@ -237,14 +237,14 @@ class Board():
             
         return report
         
-    def measure_dataloader(self, storage):
+    def measure_dataloader(self, storage, device="cuda:0"):
         self.metrics = self._load_metrics()
         
         dataloader_report = {}
         for metric_name, metric in self.metrics.items():
             values = []
             for img1, img2 in storage.values():
-                values.append(metric()(img1, img2))
+                values.append(metric().to(device)(img1, img2))
                                 
             values = torch.tensor(values)
             
