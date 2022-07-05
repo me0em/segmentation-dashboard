@@ -3,7 +3,18 @@ from torch import nn
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 
+import random
+import yaml
+import glob
+import numpy as np
+import cv2
+from PIL import Image, ImageDraw
+import matplotlib.pyplot as plt
+from scipy import ndimage
+
 from self_attention_cv.transunet import TransUnet
+
+# from OverlayerTransformer import Overlayer
 
 import numpy as np
 import einops
@@ -65,36 +76,90 @@ class XRayRenderSet(Dataset):
     def __init__(self, mask_paths, image_paths, transform):
         self.mask_paths = mask_paths
         self.image_paths = image_paths
-        self.transform = transform
         
     def __len__(self):
         return len(self.mask_paths)
     
     def __getitem__(self, idx):
         image = Image.open(self.image_paths[idx])
-        original_image = MinMaxNormalize()( transforms.ToTensor()( image ) )
+        mask = Image.open(self.mask_paths[idx])
+        
+        
+        
+        # original_image = MinMaxNormalize()( transforms.ToTensor()( image ) )
+        
+        original_image = MinMaxNormalize()( torch.from_numpy(image) )
+
+        
         image = self.transform(image)
         image = image.type(torch.float32)
         
         mask = Image.open(self.mask_paths[idx])
+
+        
         mask = self.transform(mask)
         mask = mask.type(torch.float32)
+        
         
         return original_image, image, mask
 
 
+# class XRaySet(Dataset):
+#     def __init__(self, mask_paths, image_paths, name):
+#         self.mask_paths = mask_paths
+#         self.image_paths = image_paths
+#         self.name = name
+        
+#         self.transform = transforms.Compose([
+#             transforms.ToTensor(),
+#             transforms.Resize((256, 256)),
+#             MinMaxNormalize()
+#         ])
+                
+#         self.overlayer = Overlayer(
+#             masks_path="",
+#             preps_path="",
+#             anomalies_path="/home/student/Documents/Xrays/Data/anomalies",
+#             anml_amount_max=4,
+#             probability=90,
+#             anomaly_min_pxl_intensity=750,
+#             anomaly_max_pxl_intensity=2200,  # 6000
+#             min_points_amount=3,
+#             max_points_amount=9,
+#             max_polygons_amount=5
+#         )
+
+        
+#     def __len__(self):
+#         return len(self.mask_paths)
+    
+#     def __getitem__(self, idx):
+#         image = Image.open(self.image_paths[idx])
+#         mask = Image.open(self.mask_paths[idx])
+        
+#         # Overlayer
+#         payload = {"image": np.array(image), "label": np.array(mask)>0, "name": self.image_paths[idx]}
+#         image, mask, name = self.overlayer(payload).values()
+        
+#         image = self.transform(image)
+#         image = image.type(torch.float32)
+        
+#         mask = self.transform(mask)
+#         mask = mask.type(torch.float32)
+        
+#         return image, mask, self.image_paths[idx]
+    
+    
 class XRaySet(Dataset):
     def __init__(self, mask_paths, image_paths, name):
         self.mask_paths = mask_paths
         self.image_paths = image_paths
-        self.name = name
-        
         self.transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize((256, 256)),
             MinMaxNormalize()
         ])
-
+        self.name = name
         
     def __len__(self):
         return len(self.mask_paths)

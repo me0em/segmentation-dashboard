@@ -159,6 +159,14 @@ class Board():
     def render(self, storage):
         """ TODO
         """
+        
+        def bow(img):
+            """ Black on white
+            Inverse color of a picture
+            """
+            
+            return np.absolute(255-img)
+        
         storage_keys = list(storage.keys())[:self.limit]
         storage = {k[-9:]:v for k,v in storage.items() if k in storage_keys}  # КОСТЫЛЬ
         
@@ -190,12 +198,12 @@ class Board():
         if (lines > 1) or ((lines == 1) and (phs_left != 0)):
             for i in range(lines):
                 for j in range(0, 2*self.phs_in_row, 2):
-                    axs[i, j].imshow(self._gv(storage, k)[0], cmap="gray")
+                    axs[i, j].imshow(bow(self._gv(storage, k)[0]), cmap="gray")
                     axs[i, j].set_title(
                         list(storage.keys())[k], loc="left",
                         fontsize=12, fontweight="regular", pad=15
                     )
-                    axs[i, j+1].imshow(self._gv(storage, k)[1], cmap="gray")
+                    axs[i, j+1].imshow(bow(self._gv(storage, k)[1]), cmap="gray")
                     
                     k += 1
                     j += 1
@@ -208,25 +216,25 @@ class Board():
                 first_empty_number = first_subplot_number + phs_left
                 
                 for j in range(first_subplot_number, first_empty_number, 2):
-                    axs[lines, j].imshow(self._gv(storage, k)[0], cmap="gray")
+                    axs[lines, j].imshow(bow(self._gv(storage, k)[0]), cmap="gray")
                     axs[lines, j].set_title(list(storage.keys())[k], loc='left', fontsize=12, fontweight="regular", pad=15)
-                    axs[lines, j+1].imshow(self._gv(storage, k)[1], cmap="gray")
+                    axs[lines, j+1].imshow(bow(self._gv(storage, k)[1]), cmap="gray")
                     k += 1
                     j += 1
                     
         elif (lines == 1) & (phs_left == 0):
             for j in range(0, 2*self.phs_in_row, 2):
-                axs[j].imshow(self._gv(storage, k)[0], cmap="gray")
+                axs[j].imshow(bow(self._gv(storage, k)[0]), cmap="gray")
                 axs[j].set_title(list(storage.keys())[k], loc="left", fontsize=12, fontweight="regular", pad=15)
-                axs[j+1].imshow(self._gv(storage, k)[1], cmap="gray")
+                axs[j+1].imshow(bow(self._gv(storage, k)[1]), cmap="gray")
                 k += 1
                 j += 1
                  
         elif lines == 0:
             for j in range(0, 2*n, 2):
-                axs[j].imshow(self._gv(storage, k)[0], cmap="gray")
+                axs[j].imshow(bow(self._gv(storage, k)[0]), cmap="gray")
                 axs[j].set_title(list(storage.keys())[k], loc="left", fontsize=12, fontweight="regular", pad=15)
-                axs[j+1].imshow(self._gv(storage, k)[1], cmap="gray")
+                axs[j+1].imshow(bow(self._gv(storage, k)[1]), cmap="gray")
                 k += 1
                 j += 1
        
@@ -261,8 +269,8 @@ class Board():
             nan_items = raw_tensor_len - not_nan_tensor_len
             
             dataloader_report[metric_name] = {
-                "min": torch.min(values).item(),
-                "max": torch.max(values).item(),
+                # "min": torch.min(values).item(),
+                # "max": torch.max(values).item(),
                 "mean": torch.mean(values).item(),
                 # "nan_amount": nan_items
             }
@@ -284,23 +292,34 @@ class Board():
             webbrowser.open('file://' + os.path.realpath(tf.name))
             
     @staticmethod
-    def dump(report):
-        while True:
-            inpt = input("Do you want add report in the storage? ('y' or 'n')")
-            
-            if inpt not in ("y", "yes", "n", "no"):
-                print("'y' if yes; 'n' if no")
-    
-            elif inpt in ("n", "no"):
-                return
-            
-            elif inpt in ("y", "yes"):
-                with open("storage.json", "r") as json_file:
-                    json_decoded = json.load(json_file)
+    def dump(report, y=False):
+        if y is False:
+            while True:
+                inpt = input("Do you want add report in the storage? ('y' or 'n')")
+
+                if inpt not in ("y", "yes", "n", "no"):
+                    print("'y' if yes; 'n' if no")
+
+                elif inpt in ("n", "no"):
+                    return
+
+                elif inpt in ("y", "yes"):
+                    with open("storage.json", "r") as json_file:
+                        json_decoded = json.load(json_file)
+
+                    json_decoded[list(report.keys())[0]] = list(report.values())[0]
+
+                    with open("storage.json", 'w') as json_file:
+                        json.dump(json_decoded, json_file)
+
+                    return
+        else:
+            with open("storage.json", "r") as json_file:
+                json_decoded = json.load(json_file)
 
                 json_decoded[list(report.keys())[0]] = list(report.values())[0]
 
                 with open("storage.json", 'w') as json_file:
                     json.dump(json_decoded, json_file)
-                    
+
                 return

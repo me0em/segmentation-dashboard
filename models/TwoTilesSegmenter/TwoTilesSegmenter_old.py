@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 
 from pl_bolts.models.vision.unet import UNet
 from torchvision.transforms import transforms
-from ResNet import ResNet18
+from .ResNet import ResNet18
 from PIL import Image, ImageFilter
 from glob import glob
 
@@ -52,7 +52,7 @@ class Segmenter(LightningModule):
 
         self.model = UNet(input_channels=1, num_classes=1, num_layers=5, features_start=64, bilinear=False)
 
-        self.POR = 0.05
+        self.POR = 0.1
 
         self.transform = transforms.Compose([
             # transforms.ToTensor(),
@@ -112,7 +112,9 @@ class Segmenter(LightningModule):
         flag1 = is_anomalia_pred1.ge(self.POR)
 
         mask_ = self.model(img[flag].unsqueeze(1))
+        mask_ = torch.sigmoid(mask_)
         mask1_ = self.model(img1[flag1].unsqueeze(1))
+        mask1_ = torch.sigmoid(mask1_)
         mask = torch.zeros(*img.size())
         mask1 = torch.zeros(*img1.size())
         k = 0
@@ -179,16 +181,14 @@ class DatasetTile(Dataset):
     def __getitem__(self, ind):
         img = Image.open(self.img_path + "/" + self.path_patch[ind] + self.im_prefix)
         mask = Image.open(self.mask_path + "/" + self.path_patch[ind] + self.mask_prefix)
-        mask = np.array(mask).astype(float)
-        if mask.max() != 0:
-            mask = (mask - mask.min()) / (mask.max() - mask.min())
+
         return self.transform(img), self.transform_mask(mask), self.path_patch[ind]
 
 
 
 def build_the_dataloader(batch_size, img_path, mask_path, name):
     im_prefix = ".png"
-    mask_prefix = "_mask.png"
+    mask_prefix = ".png"
 
     path_im = glob(f"{img_path}/*{im_prefix}")
     path_mask = glob(f"{mask_path}/*{mask_prefix}")

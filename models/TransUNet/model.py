@@ -37,6 +37,7 @@ class MyTransUNet(TransUnet):
             x = self.forward(x)
             threshold = torch.quantile(x.flatten(), torch.tensor([0.01]).to(device))
             x = (x > threshold).type(torch.float32)
+            # x = x.type(torch.float32)  # without the threshold
             
         return x
 
@@ -51,7 +52,7 @@ def build_the_model(device=None, model_path=None):
         in_channels=1,
         img_dim=256,
         vit_blocks=8,  # было 8
-        vit_dim_linear_mhsa_block=512,
+        vit_dim_linear_mhsa_block=512,  #  лучшее 512
         classes=1
     )
     
